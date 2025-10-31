@@ -98,7 +98,7 @@ describe("JobDescriptionListPage", () => {
 
   it("passes the submit handler to the add dialog", async () => {
     const user = userEvent.setup();
-    const handleCreateJobDescription = vi.fn().mockResolvedValue();
+    const handleCreateJobDescription = vi.fn().mockResolvedValue(undefined);
 
     useJobDescriptionListPageMock.mockReturnValue({
       ...baseHookResult,
