@@ -1,73 +1,111 @@
-# React + TypeScript + Vite
+JD Analyzer (React)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+An admin-facing React app for analyzing job openings and candidate resumes. It lets you:
+- Create job descriptions by uploading a PDF and a title
+- Upload candidate resumes (PDF) to an opening
+- See processed candidates with fit score, brief summary, and details
+- Filter by Candidate ID and refresh results
+- Navigate across a simple, protected dashboard
 
-Currently, two official plugins are available:
+The app consumes a backend API (configurable via `VITE_API_URL`) for authentication, job description creation, resume upload, and candidate results.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Quick Links
+- Dev server: `pnpm dev`
+- Build: `pnpm build` and `pnpm preview`
+- Tests: `pnpm test`
+- Lint/format: `pnpm lint`, `pnpm lint:fix`, `pnpm prettier`, `pnpm prettier:fix`
 
-## React Compiler
+Tech Stack
+- React 19 + React Router
+- TypeScript + Vite
+- Tailwind CSS
+- Axios for HTTP
+- Zod for env validation
+- Vitest + Testing Library for tests
 
-The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
+Getting Started
+1) Prerequisites
+- Node.js 18+ and pnpm installed
+- A running backend that exposes the endpoints used by this app
 
-## Expanding the ESLint configuration
+2) Configure environment
+- Copy `.env.example` to `.env` and adjust the API URL:
+  - `VITE_API_URL=http://localhost:8000` (or your backend URL)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+3) Install dependencies
+- `pnpm install`
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+4) Start the app
+- `pnpm dev`
+- Open the printed local URL in your browser
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+5) Build and preview
+- `pnpm build`
+- `pnpm preview`
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Authentication
+- On first load without a token, the app redirects to `/login`.
+- Login calls `POST /auth/login` and stores the returned JWT.
+- The app hydrates user info via `GET /auth/me` and attaches `Authorization: Bearer <token>` on requests.
+- A `401` response clears the token and redirects back to `/login`.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Core Flows
+- Create opening
+  - From “Job Descriptions”, click “Add opening”, enter a title and upload a PDF JD.
+  - Backend: `POST /jds` with `title` and `job_description` (FormData).
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- Upload resumes
+  - From an opening, click “Add candidates” and select one or more PDF files.
+  - Per-opening upload limit is 20 resumes (see `RESUME_UPLOAD_LIMIT`). Files must be PDF.
+  - Backend: `POST /jds/:jdId/resumes` with `resumes[]` (FormData).
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- View results
+  - Open an opening to see candidates with: Candidate ID, fit score badge, and summary.
+  - Use the Candidate ID search input to filter the table.
+  - Click “View details” for strengths, areas for improvement, and evidence in a side sheet.
+  - Click “Refresh results” to re-fetch latest data.
+
+Project Structure (high level)
+- `src/app.tsx` – Router and providers
+- `src/lib/api` – Axios client and API calls
+- `src/features/job-descriptions/*` – Pages, hooks, and UI for openings/candidates
+- `src/components/ui/*` – UI primitives
+
+Available Scripts
+- `pnpm dev` – Start Vite dev server
+- `pnpm build` – Type-check and build for production
+- `pnpm preview` – Preview production build
+- `pnpm test` – Run vitest suite
+- `pnpm lint` / `pnpm lint:fix` – ESLint
+- `pnpm prettier` / `pnpm prettier:fix` – Prettier
+
+Environment Variables
+- `VITE_API_URL` – Base URL for the backend API. Required.
+
+Backend API (expected)
+- `POST /auth/login` – Authenticate and return `{ token, user }`
+- `GET /auth/me` – Return authenticated user
+- `GET /jds` – List job descriptions `{ jd_id, title, candidate_count }[]`
+- `POST /jds` – Create a job description (FormData: `title`, `job_description`)
+- `POST /jds/:jdId/resumes` – Upload candidate resumes (FormData: `resumes[]`)
+
+Known Limits & Notes
+- Resume uploads are PDF-only and limited to 20 per opening.
+- Candidate search filters by Candidate ID only.
+- Some content (summaries/details) may arrive asynchronously based on backend processing.
+
+Planned Improvements
+Below are the items noted to improve the app; keeping them here helps guide next iterations.
+- React Query (TanStack Query):
+  - Normalize data fetching/state, caching, refetch, loading/error boundaries, and optimistic updates.
+- Pagination:
+  - Paginate job descriptions and candidates; expose page size and navigation.
+- Better search:
+  - Expand beyond Candidate ID to include name/email, fit score range, and free-text across summary.
+- Ordering/sorting:
+  - Sort by fit score, candidate name, updated time; remember user preference.
+- Better state management:
+  - Consolidate view state and cross-page derived state using lightweight stores or React Context where appropriate.
+
+![App running](public/docs/app_running.png)
+
