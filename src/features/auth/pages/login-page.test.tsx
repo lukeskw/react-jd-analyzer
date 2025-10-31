@@ -55,7 +55,7 @@ describe("LoginPage", () => {
 
   it("submits the form and navigates to the job descriptions list", async () => {
     const user = userEvent.setup();
-    const login = vi.fn().mockResolvedValue(undefined);
+    const login = vi.fn().mockResolvedValue();
     useAuthMock.mockReturnValue({
       login,
       status: "idle",

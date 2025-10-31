@@ -1,73 +1,18 @@
-import { Suspense, lazy } from "react";
-import {
-  BrowserRouter,
-  Navigate,
-  Outlet,
-  Route,
-  Routes,
-} from "react-router-dom";
+import { Suspense } from "react";
+
 import { Toaster } from "sonner";
 
-import { AuthProvider, useAuth } from "@/hooks/use-auth";
-import { Loader2 } from "lucide-react";
-
-const AppLayout = lazy(() =>
-  import("@/components/layout/app-layout").then((module) => ({
-    default: module.AppLayout,
-  })),
-);
-
-const LoginPage = lazy(() =>
-  import("@/features/auth/pages/login-page").then((module) => ({
-    default: module.LoginPage,
-  })),
-);
-
-const AddCandidatesPage = lazy(() =>
-  import("@/features/job-descriptions/pages/AddCandidatesPage").then(
-    (module) => ({
-      default: module.AddCandidatesPage,
-    }),
-  ),
-);
-
-const JobDescriptionDetailPageComponent = lazy(() =>
-  import("@/features/job-descriptions/pages/JobDescriptionDetailPage").then(
-    (module) => ({
-      default: module.JobDescriptionDetailPage,
-    }),
-  ),
-);
-
-const JobDescriptionListPage = lazy(() =>
-  import("@/features/job-descriptions/pages/JobDescriptionListPage").then(
-    (module) => ({
-      default: module.JobDescriptionListPage,
-    }),
-  ),
-);
-
-const FullscreenLoader = () => (
-  <div className="flex min-h-screen items-center justify-center">
-    <div className="flex items-end justify-center gap-2">
-      <Loader2 className="size-8 animate-spin" />
-    </div>
-  </div>
-);
-
-const ProtectedRoute = () => {
-  const { token, status } = useAuth();
-
-  if (status === "loading") {
-    return <FullscreenLoader />;
-  }
-
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <Outlet />;
-};
+import { AuthProvider } from "@/hooks/use-auth";
+import {
+  AddCandidatesPage,
+  AppLayout,
+  JobDescriptionDetailPageComponent,
+  JobDescriptionListPage,
+  LoginPage,
+  ProtectedRoute,
+} from "@/lib/routes";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { FullscreenLoader } from "./components/layout/fullscreen-loader";
 
 function App() {
   return (
